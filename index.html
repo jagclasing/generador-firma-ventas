@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generador de Firma</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 900px; margin: auto; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input { width: 100%; padding: 8px; margin-top: 4px; }
+    #output { margin-top: 30px; white-space: pre-wrap; background: #f4f4f4; padding: 20px; border-radius: 8px; }
+    button {
+  background-color: #eceded;
+  color: #0c1717;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #0c1717;
+  color: white;
+}
+    iframe { width: 100%; height: 400px; border: 1px solid #ccc; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Generador de Firma Clasing - Ventas</h1>
+  <p>Completa los campos y genera tu firma automáticamente.</p>
+
+  <label>Nombre completo</label>
+  <input id="nombre" type="text" />
+
+  <label>Cargo</label>
+  <input id="cargo" type="text" />
+
+  <label>Número de teléfono</label>
+  <input id="telefono" type="text" />
+
+  <label>Enlace a la foto</label>
+  <input id="foto" type="text" />
+
+  <label>Enlace de LinkedIn</label>
+  <input id="linkedin" type="text" />
+
+  <label>Enlace calendario HubSpot</label>
+  <input id="calendario" type="text" />
+
+  <div style="height:30px;"></div>
+
+  <button onclick="generar()">Generar Firma</button>
+
+  
+
+  <h2>Resultado HTML</h2>
+  <div id="output"></div>
+
+  <h2>Vista previa</h2>
+  <iframe id="preview"></iframe>
+
+<script>
+function isValidUrl(string) {
+  try { new URL(string); return true; } catch(e) { return false; }
+}
+
+function checkImage(url, timeout = 5000) {
+  return new Promise((resolve) => {
+    if (!url) return resolve(false);
+    const img = new Image();
+    let done = false;
+    const timer = setTimeout(() => { if (!done) { done = true; resolve(false); } }, timeout);
+    img.onload = () => { if (!done) { done = true; clearTimeout(timer); resolve(true); } };
+    img.onerror = () => { if (!done) { done = true; clearTimeout(timer); resolve(false); } };
+    img.src = url;
+  });
+}
+
+async function generar() {
+  const nombre = document.getElementById('nombre').value.trim();
+  const cargo = document.getElementById('cargo').value.trim();
+  const telefono = document.getElementById('telefono').value.trim();
+  const foto = document.getElementById('foto').value.trim();
+  const linkedin = document.getElementById('linkedin').value.trim();
+  const calendario = document.getElementById('calendario').value.trim();
+
+  // Validaciones y correcciones útiles
+  const cleanedPhone = telefono.replace(/[^0-9+]/g, '');
+  const telefonoHref = cleanedPhone.startsWith('+') ? `tel:${cleanedPhone}` : `tel:+${cleanedPhone}`;
+
+  // Comprobar imágenes (evita errores BlobNotFound cuando la imagen no existe)
+  const fotoOk = await checkImage(foto);
+  const bannerUrl = 'https://143924599.fs1.hubspotusercontent-eu1.net/hubfs/143924599/imagen-firma/Generales/banner-ventas.png';
+  const bannerOk = await checkImage(bannerUrl);
+
+  // Preparar los elementos dinámicos: solo añadimos <a> si el enlace es válido
+  const linkedinAnchorStart = isValidUrl(linkedin) ? `<a href="${linkedin}" target="_blank" rel="noopener noreferrer">` : '';
+  const linkedinAnchorEnd = isValidUrl(linkedin) ? `</a>` : '';
+
+  const bannerAnchorStart = isValidUrl(calendario) && bannerOk ? `<a href="${calendario}" target="_blank" rel="noopener noreferrer" style="display:inline-block; cursor:pointer">` : '';
+  const bannerAnchorEnd = isValidUrl(calendario) && bannerOk ? `</a>` : '';
+
+  const fotoTag = fotoOk ? `<img src="${foto}" width="105" height="105" style="border:none" />` : `<img src="https://via.placeholder.com/105?text=Foto" width="105" height="105" style="border:none" />`;
+
+  const html = `
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse">
+  <tbody><tr><td>
+    <table align="left" border="0" cellpadding="0" cellspacing="0" style="max-width: 480px; border-collapse: collapse" width="480">
+      <tbody>
+        <tr><td style="padding:10px 0;background:#fff">
+          <table width="100%" style="border-collapse:collapse">
+            <tbody>
+              <tr>
+                <td width="32%" style="padding:0">
+                  ${fotoTag}
+                </td>
+                <td width="68%" style="padding:0 12px; font-family:'DM Sans',sans-serif;">
+                  <img src="https://143924599.fs1.hubspotusercontent-eu1.net/hubfs/143924599/imagen-firma/Generales/logo-clasing.png" width="109" height="27" /><br><br>
+                  <span style="font-size:20px;"><strong>${nombre || 'Nombre Apellido'}</strong></span><br>
+                  <span style="font-size:14px; line-height:30px;">${cargo || 'Cargo'}</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="vertical-align: middle; padding-top:8px;">
+                  ${linkedinAnchorStart}<img src="https://143924599.fs1.hubspotusercontent-eu1.net/hubfs/143924599/imagen-firma/Generales/linkedin.png" width="28" alt="LinkedIn" />${linkedinAnchorEnd}
+                  <a href="https://www.instagram.com/clasing.ai/" target="_blank"><img src="https://143924599.fs1.hubspotusercontent-eu1.net/hubfs/143924599/imagen-firma/Generales/instagram.png" width="28" alt="Instagram" /></a>
+                  <a href="https://clasing.ai/" target="_blank"><img src="https://143924599.fs1.hubspotusercontent-eu1.net/hubfs/143924599/imagen-firma/Generales/web.png" width="28" alt="Web" /></a>
+                </td>
+                <td style="padding:18px 12px; font-family:'DM Sans',sans-serif;">
+                  ${telefonoHref ? `<a href="${telefonoHref}" style="color:#000;text-decoration:none">${telefono}</a>` : ''}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </td></tr>
+        <tr>
+          <td>
+            ${bannerAnchorStart}<img src="${bannerOk ? bannerUrl : 'https://via.placeholder.com/378x34?text=Banner'}" width="378" height="34" style="display:inline-block; border:none;" alt="Calendario" />${bannerAnchorEnd}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </td></tr></tbody>
+</table>`;
+
+  document.getElementById('output').innerText = html;
+  document.getElementById('preview').srcdoc = html;
+}
+</script>
+</body>
+</html>
